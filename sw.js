@@ -1,4 +1,4 @@
-const CACHE='pikachu-dex-v1.3-wcs2026-pokemonxp';
+const CACHE='pikachu-dex-v1.5-image-export';
 const CORE=['./','./index.html','./style.css','./app.js','./data.js','./manifest.webmanifest'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE))));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))));

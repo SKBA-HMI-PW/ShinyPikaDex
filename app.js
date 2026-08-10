@@ -49,12 +49,133 @@
   $('undoBtn').addEventListener('click',()=>{const last=state.history.pop();if(!last)return;last.wasOwned?state.owned.add(last.id):state.owned.delete(last.id);save();render();});
   $('resetBtn').addEventListener('click',()=>$('confirmDialog').showModal());
   $('confirmReset').addEventListener('click',()=>{state.history.push(...[...state.owned].map(id=>({id,wasOwned:true})));state.owned.clear();save();render();});
-  $('menuBtn').addEventListener('click',()=>{$('toolsPanel').hidden=!$('toolsPanel').hidden;});
+  $('menuBtn').addEventListener('click',()=>{$('backupInfo').hidden=!$('backupInfo').hidden;});
   $('exportBtn').addEventListener('click',()=>{
     const payload={app:'Pikachu Shiny Dex Web',version:1,total:CARDS.length,owned:[...state.owned].sort((a,b)=>a-b),ownedNames:[...state.owned].sort((a,b)=>a-b).map(id=>CARDS[id].name),exportedAt:new Date().toISOString()};
     const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob);
     const a=document.createElement('a'); a.href=url; a.download=`pikachu-shiny-dex-backup-${new Date().toISOString().slice(0,10)}.json`; a.click(); URL.revokeObjectURL(url);
   });
+  function loadImage(src) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = src;
+    });
+  }
+
+  function roundedRect(ctx, x, y, w, h, r) {
+    const rr = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + rr, y);
+    ctx.arcTo(x + w, y, x + w, y + h, rr);
+    ctx.arcTo(x + w, y + h, x, y + h, rr);
+    ctx.arcTo(x, y + h, x, y, rr);
+    ctx.arcTo(x, y, x + w, y, rr);
+    ctx.closePath();
+  }
+
+  async function saveCurrentListImage() {
+    const cards = filteredCards();
+    if (!cards.length) {
+      alert('저장할 카드가 없습니다.');
+      return;
+    }
+
+    const button = $('saveImageBtn');
+    const oldText = button.textContent;
+    button.disabled = true;
+    button.textContent = '이미지 만드는 중...';
+
+    try {
+      const cols = 7;
+      const cardW = 200;
+      const cardH = 332;
+      const gap = 12;
+      const margin = 24;
+      const headerH = 132;
+      const rows = Math.ceil(cards.length / cols);
+      const width = margin * 2 + cols * cardW + (cols - 1) * gap;
+      const height = headerH + margin + rows * cardH + Math.max(0, rows - 1) * gap + margin;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+
+      ctx.fillStyle = '#08131e';
+      ctx.fillRect(0, 0, width, height);
+      ctx.fillStyle = '#122536';
+      ctx.fillRect(0, 0, width, headerH);
+
+      const owned = state.owned.size;
+      const total = CARDS.length;
+      const unowned = total - owned;
+      const progress = (owned * 100 / total).toFixed(1);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '900 40px system-ui, -apple-system, Segoe UI, sans-serif';
+      ctx.textBaseline = 'top';
+      ctx.fillText('피카츄 이로치도감', margin, 18);
+
+      ctx.fillStyle = '#d6e0e8';
+      ctx.font = '700 24px system-ui, -apple-system, Segoe UI, sans-serif';
+      ctx.fillText(`보유 ${owned} / ${total} · 미보유 ${unowned} · 완성률 ${progress}%`, margin, 68);
+
+      const statusParts = [];
+      if (state.unownedOnly) statusParts.push('미보유 카드만');
+      if (state.query) statusParts.push(`검색: ${state.query}`);
+      statusParts.push(`표시 ${cards.length}개`);
+      ctx.fillStyle = '#9aabba';
+      ctx.font = '600 20px system-ui, -apple-system, Segoe UI, sans-serif';
+      ctx.fillText(statusParts.join(' · '), margin, 100);
+
+      const loaded = await Promise.all(cards.map(card => loadImage(card.image)));
+      for (let i = 0; i < cards.length; i++) {
+        const row = Math.floor(i / cols);
+        const col = i % cols;
+        const x = margin + col * (cardW + gap);
+        const y = headerH + margin + row * (cardH + gap);
+        const card = cards[i];
+        const img = loaded[i];
+
+        ctx.save();
+        roundedRect(ctx, x, y, cardW, cardH, 12);
+        ctx.clip();
+        ctx.drawImage(img, x, y, cardW, cardH);
+        if (state.owned.has(card.id)) {
+          ctx.fillStyle = 'rgba(7,7,7,0.64)';
+          ctx.fillRect(x, y, cardW, cardH);
+        }
+        ctx.restore();
+
+        ctx.strokeStyle = '#dbe4e9';
+        ctx.lineWidth = 2;
+        roundedRect(ctx, x, y, cardW, cardH, 12);
+        ctx.stroke();
+      }
+
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+      if (!blob) throw new Error('PNG 생성 실패');
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const mode = state.unownedOnly ? 'unowned' : (state.query ? 'search' : 'all');
+      a.href = url;
+      a.download = `pikachu-shiny-dex-${mode}-${new Date().toISOString().slice(0,10)}.png`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      console.error(err);
+      alert('현재 목록 이미지를 저장하지 못했습니다. 새로고침 후 다시 시도해 주세요.');
+    } finally {
+      button.disabled = false;
+      button.textContent = oldText;
+    }
+  }
+
+  $('saveImageBtn').addEventListener('click', saveCurrentListImage);
   $('importBtn').addEventListener('click',()=>$('importFile').click());
   $('importFile').addEventListener('change',async e=>{
     const file=e.target.files[0]; if(!file)return;
