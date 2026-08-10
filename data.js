@@ -463,5 +463,15 @@ window.CARDS = [
     "id": 92,
     "name": "Willow's Assistant",
     "image": "assets/cards/92.webp"
+  },
+  {
+    "id": 93,
+    "name": "WCS2026",
+    "image": "assets/cards/93.webp"
+  },
+  {
+    "id": 94,
+    "name": "POKEMON XP",
+    "image": "assets/cards/94.webp"
   }
 ];
