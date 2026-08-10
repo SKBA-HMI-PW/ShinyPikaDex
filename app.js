@@ -74,11 +74,15 @@
   $('undoBtn').addEventListener('click',()=>{const last=state.history.pop();if(!last)return;last.wasOwned?state.owned.add(last.id):state.owned.delete(last.id);save();render();});
   $('resetBtn').addEventListener('click',()=>$('confirmDialog').showModal());
   $('confirmReset').addEventListener('click',()=>{state.history.push(...[...state.owned].map(id=>({id,wasOwned:true})));state.owned.clear();save();render();});
-  $('menuBtn').addEventListener('click',()=>{
-    const panel = $('settingsPanel');
-    panel.hidden = !panel.hidden;
-    $('backupInfo').hidden = true;
+  $('menuBtn').addEventListener('click',(e)=>{
+    e.stopPropagation();
+    const popup = $('settingsPopup');
+    popup.hidden = !popup.hidden;
   });
+
+  $('settingsPopup').addEventListener('click',e=>e.stopPropagation());
+  document.addEventListener('click',()=>{ $('settingsPopup').hidden = true; });
+  document.addEventListener('keydown',e=>{ if(e.key === 'Escape') $('settingsPopup').hidden = true; });
 
   $('colorBlackBtn').addEventListener('click',()=>{ state.checkColor='black'; save(); applyCheckStyle(); });
   $('colorGrayBtn').addEventListener('click',()=>{ state.checkColor='gray'; save(); applyCheckStyle(); });
