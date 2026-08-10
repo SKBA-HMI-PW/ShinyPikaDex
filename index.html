@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#122536">
+  <title>피카츄 이로치도감</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="title-area">
+      <h1>피카츄 이로치도감</h1>
+      <p id="progressText">보유 0 / 93 · 미보유 93 · 완성률 0.0%</p>
+      <p id="filterStatus" class="sub-status" hidden></p>
+    </div>
+    <button id="unownedBtn" class="header-btn" type="button">미보유만</button>
+    <button id="menuBtn" class="icon-btn" type="button" aria-label="메뉴">⚙</button>
+  </header>
+
+  <main>
+    <section class="search-bar">
+      <input id="searchInput" type="search" placeholder="피카츄 이름 검색 (예: Willow, Hat, Crown)" autocomplete="off">
+    </section>
+
+    <section id="toolsPanel" class="tools-panel" hidden>
+      <button id="exportBtn" type="button">백업 파일 보내기</button>
+      <button id="importBtn" type="button">백업 파일 불러오기</button>
+      <input id="importFile" type="file" accept="application/json,.json" hidden>
+      <p>체크 기록은 이 기기의 브라우저에 자동 저장됩니다. 백업 파일로 다른 기기에 옮길 수 있습니다.</p>
+    </section>
+
+    <section id="grid" class="card-grid" aria-live="polite"></section>
+    <p id="emptyState" class="empty-state" hidden>조건에 맞는 카드가 없습니다.</p>
+  </main>
+
+  <footer class="bottom-controls">
+    <button id="undoBtn" type="button">↶ 되돌리기</button>
+    <button id="resetBtn" type="button">⟳ 전체 초기화</button>
+  </footer>
+
+  <dialog id="confirmDialog">
+    <form method="dialog">
+      <h2>전체 초기화</h2>
+      <p>모든 체크를 해제할까요?</p>
+      <div class="dialog-buttons">
+        <button value="cancel">취소</button>
+        <button id="confirmReset" value="confirm" class="danger">초기화</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
