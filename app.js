@@ -32,8 +32,10 @@
   function applyCheckStyle() {
     const [r,g,b] = overlayRgb();
     document.documentElement.style.setProperty('--owned-overlay', `rgba(${r},${g},${b},${state.checkAlpha})`);
-    $('colorBlackBtn').classList.toggle('active', state.checkColor === 'black');
-    $('colorGrayBtn').classList.toggle('active', state.checkColor === 'gray');
+    const blackBtn = $('colorBlackBtn');
+    const grayBtn = $('colorGrayBtn');
+    if (blackBtn) blackBtn.classList.toggle('active', state.checkColor === 'black');
+    if (grayBtn) grayBtn.classList.toggle('active', state.checkColor === 'gray');
     document.querySelectorAll('.alpha-btn').forEach(btn => {
       btn.classList.toggle('active', Number(btn.dataset.alpha) === state.checkAlpha);
     });
@@ -77,12 +79,13 @@
   $('menuBtn').addEventListener('click',(e)=>{
     e.stopPropagation();
     const popup = $('settingsPopup');
-    popup.hidden = !popup.hidden;
+    if (popup) popup.hidden = !popup.hidden;
   });
 
-  $('settingsPopup').addEventListener('click',e=>e.stopPropagation());
-  document.addEventListener('click',()=>{ $('settingsPopup').hidden = true; });
-  document.addEventListener('keydown',e=>{ if(e.key === 'Escape') $('settingsPopup').hidden = true; });
+  const settingsPopup = $('settingsPopup');
+  if (settingsPopup) settingsPopup.addEventListener('click',e=>e.stopPropagation());
+  document.addEventListener('click',()=>{ if (settingsPopup) settingsPopup.hidden = true; });
+  document.addEventListener('keydown',e=>{ if(e.key === 'Escape' && settingsPopup) settingsPopup.hidden = true; });
 
   $('colorBlackBtn').addEventListener('click',()=>{ state.checkColor='black'; save(); applyCheckStyle(); });
   $('colorGrayBtn').addEventListener('click',()=>{ state.checkColor='gray'; save(); applyCheckStyle(); });
