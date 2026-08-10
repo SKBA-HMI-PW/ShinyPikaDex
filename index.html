@@ -29,6 +29,28 @@
       <button id="importBtn" type="button">백업 파일 불러오기</button>
       <button id="saveImageBtn" type="button">현재 목록 이미지 저장</button>
       <input id="importFile" type="file" accept="application/json,.json" hidden>
+
+      <div id="settingsPanel" class="settings-panel" hidden>
+        <div class="setting-row">
+          <span class="setting-title">체크 색상</span>
+          <div class="setting-buttons">
+            <button id="colorBlackBtn" class="setting-btn" type="button">검정</button>
+            <button id="colorGrayBtn" class="setting-btn" type="button">회색</button>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <span class="setting-title">체크 투명도</span>
+          <div class="setting-buttons">
+            <button class="setting-btn alpha-btn" data-alpha="1" type="button">100%</button>
+            <button class="setting-btn alpha-btn" data-alpha="0.8" type="button">80%</button>
+            <button class="setting-btn alpha-btn" data-alpha="0.6" type="button">60%</button>
+          </div>
+        </div>
+
+        <p class="setting-note">설정은 이 브라우저에 자동 저장되고, 백업 파일에도 함께 포함됩니다.</p>
+      </div>
+
       <p id="backupInfo" hidden>체크 기록은 이 기기의 브라우저에 자동 저장됩니다. 백업 파일로 다른 기기에 옮길 수 있습니다.</p>
     </section>
   </div>

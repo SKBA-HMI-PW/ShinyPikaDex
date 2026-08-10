@@ -1,6 +1,6 @@
 (() => {
   const STORAGE_KEY = 'pikachu-shiny-dex-web-v1';
-  const state = { owned: new Set(), history: [], unownedOnly: false, query: '' };
+  const state = { owned: new Set(), history: [], unownedOnly: false, query: '', checkColor: 'black', checkAlpha: 0.64 };
   const $ = id => document.getElementById(id);
   const grid = $('grid');
 
@@ -8,10 +8,35 @@
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
       if (Array.isArray(saved.owned)) saved.owned.forEach(id => Number.isInteger(id) && id >= 0 && id < CARDS.length && state.owned.add(id));
+      if (saved.settings && (saved.settings.checkColor === 'black' || saved.settings.checkColor === 'gray')) {
+        state.checkColor = saved.settings.checkColor;
+      }
+      if (saved.settings && [1, 0.8, 0.6].includes(Number(saved.settings.checkAlpha))) {
+        state.checkAlpha = Number(saved.settings.checkAlpha);
+      }
     } catch (_) {}
   }
   function save() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({version:1, owned:[...state.owned].sort((a,b)=>a-b), savedAt:new Date().toISOString()}));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      version: 2,
+      owned: [...state.owned].sort((a,b)=>a-b),
+      settings: { checkColor: state.checkColor, checkAlpha: state.checkAlpha },
+      savedAt: new Date().toISOString()
+    }));
+  }
+
+  function overlayRgb() {
+    return state.checkColor === 'gray' ? [70,70,70] : [7,7,7];
+  }
+
+  function applyCheckStyle() {
+    const [r,g,b] = overlayRgb();
+    document.documentElement.style.setProperty('--owned-overlay', `rgba(${r},${g},${b},${state.checkAlpha})`);
+    $('colorBlackBtn').classList.toggle('active', state.checkColor === 'black');
+    $('colorGrayBtn').classList.toggle('active', state.checkColor === 'gray');
+    document.querySelectorAll('.alpha-btn').forEach(btn => {
+      btn.classList.toggle('active', Number(btn.dataset.alpha) === state.checkAlpha);
+    });
   }
   function filteredCards() {
     const q = state.query.trim().toLowerCase();
@@ -49,9 +74,21 @@
   $('undoBtn').addEventListener('click',()=>{const last=state.history.pop();if(!last)return;last.wasOwned?state.owned.add(last.id):state.owned.delete(last.id);save();render();});
   $('resetBtn').addEventListener('click',()=>$('confirmDialog').showModal());
   $('confirmReset').addEventListener('click',()=>{state.history.push(...[...state.owned].map(id=>({id,wasOwned:true})));state.owned.clear();save();render();});
-  $('menuBtn').addEventListener('click',()=>{$('backupInfo').hidden=!$('backupInfo').hidden;});
+  $('menuBtn').addEventListener('click',()=>{
+    const panel = $('settingsPanel');
+    panel.hidden = !panel.hidden;
+    $('backupInfo').hidden = true;
+  });
+
+  $('colorBlackBtn').addEventListener('click',()=>{ state.checkColor='black'; save(); applyCheckStyle(); });
+  $('colorGrayBtn').addEventListener('click',()=>{ state.checkColor='gray'; save(); applyCheckStyle(); });
+  document.querySelectorAll('.alpha-btn').forEach(btn => btn.addEventListener('click',()=>{
+    state.checkAlpha = Number(btn.dataset.alpha);
+    save();
+    applyCheckStyle();
+  }));
   $('exportBtn').addEventListener('click',()=>{
-    const payload={app:'Pikachu Shiny Dex Web',version:1,total:CARDS.length,owned:[...state.owned].sort((a,b)=>a-b),ownedNames:[...state.owned].sort((a,b)=>a-b).map(id=>CARDS[id].name),exportedAt:new Date().toISOString()};
+    const payload={app:'Pikachu Shiny Dex Web',version:2,total:CARDS.length,owned:[...state.owned].sort((a,b)=>a-b),ownedNames:[...state.owned].sort((a,b)=>a-b).map(id=>CARDS[id].name),settings:{checkColor:state.checkColor,checkAlpha:state.checkAlpha},exportedAt:new Date().toISOString()};
     const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob);
     const a=document.createElement('a'); a.href=url; a.download=`pikachu-shiny-dex-backup-${new Date().toISOString().slice(0,10)}.json`; a.click(); URL.revokeObjectURL(url);
   });
@@ -144,7 +181,8 @@
         ctx.clip();
         ctx.drawImage(img, x, y, cardW, cardH);
         if (state.owned.has(card.id)) {
-          ctx.fillStyle = 'rgba(7,7,7,0.64)';
+          const [or,og,ob] = overlayRgb();
+          ctx.fillStyle = `rgba(${or},${og},${ob},${state.checkAlpha})`;
           ctx.fillRect(x, y, cardW, cardH);
         }
         ctx.restore();
@@ -184,10 +222,21 @@
       if(!Array.isArray(data.owned)) throw new Error('invalid');
       const imported=new Set(data.owned.map(Number).filter(id=>Number.isInteger(id)&&id>=0&&id<CARDS.length));
       if(!confirm(`백업에서 ${imported.size}개의 보유 기록을 불러옵니다. 현재 기록을 교체할까요?`)) return;
-      state.owned=imported; state.history=[]; save(); render(); alert('백업을 불러왔습니다.');
+      state.owned=imported;
+      state.history=[];
+      if (data.settings && (data.settings.checkColor === 'black' || data.settings.checkColor === 'gray')) {
+        state.checkColor = data.settings.checkColor;
+      }
+      if (data.settings && [1,0.8,0.6].includes(Number(data.settings.checkAlpha))) {
+        state.checkAlpha = Number(data.settings.checkAlpha);
+      }
+      save();
+      applyCheckStyle();
+      render();
+      alert('백업을 불러왔습니다.');
     }catch(_){alert('올바른 피카츄 도감 백업 파일이 아닙니다.');}
     e.target.value='';
   });
-  load(); render();
+  load(); applyCheckStyle(); render();
   if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
 })();
