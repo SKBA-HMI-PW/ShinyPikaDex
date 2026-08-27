@@ -473,5 +473,30 @@ window.CARDS = [
     "id": 94,
     "name": "POKEMON XP",
     "image": "assets/cards/94.webp"
+  },
+  {
+    "id": 95,
+    "name": "Pokéxciting Kuala Lumpur",
+    "image": "assets/cards/95.webp"
+  },
+  {
+    "id": 96,
+    "name": "Pokéxciting Taipei",
+    "image": "assets/cards/96.webp"
+  },
+  {
+    "id": 97,
+    "name": "Pokéxciting Singapore",
+    "image": "assets/cards/97.webp"
+  },
+  {
+    "id": 98,
+    "name": "Pokéxciting Manila",
+    "image": "assets/cards/98.webp"
+  },
+  {
+    "id": 99,
+    "name": "Pokéxciting Bangkok",
+    "image": "assets/cards/99.webp"
   }
 ];
