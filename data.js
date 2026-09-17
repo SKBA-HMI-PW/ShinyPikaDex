@@ -498,7 +498,7 @@ window.CARDS = [
     "id": 99,
     "name": "Pokéxciting Bangkok",
     "image": "assets/cards/99.webp"
-  }
+  },
   {
   "id": 100,
   "name": "Hanbok♀",
